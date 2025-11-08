@@ -1,0 +1,53 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  tests:
+    name: PHPUnit Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: db_test
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: "postgresql://myuser:mypassword@localhost:5432/db_test?serverVersion=16&charset=utf8"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_pgsql, dom, zip
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      - name: Prepare test database
+        run: |
+          php bin/console doctrine:database:drop --force --if-exists --env=test
+          php bin/console doctrine:database:create --env=test
+          php bin/console doctrine:schema:update --force --env=test
+
+      - name: Run PHPUnit tests
+        run: ./vendor/bin/phpunit --testdox

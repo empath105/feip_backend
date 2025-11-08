@@ -2,25 +2,158 @@
 
 namespace App\Entity;
 
+use App\Repository\HouseRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+
+#[ORM\Entity(repositoryClass: HouseRepository::class)]
 class House
 {
-    public function __construct(
-        public int $id,
-        public string $name,
-        public int $beds,
-        public string $amenities,
-        public int $distanceToSea,
-        public float $pricePerNight
-    ) {}
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
 
-    public function toArray(): array {
+    #[ORM\Column(length: 255)]
+    private ?string $name = null;
+
+    #[ORM\Column]
+    private ?int $beds = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $amenities = null;
+
+    #[ORM\Column(name: 'distance_to_sea')]
+    private ?int $distanceToSea = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $pricePerNight = null;
+
+    #[ORM\Column]
+    private ?bool $isAvailable = true;
+
+    #[ORM\OneToMany(mappedBy: 'house', targetEntity: Booking::class, cascade: ['remove'])]
+    private Collection $bookings;
+
+
+    public function __construct()
+    {
+        $this->bookings = new ArrayCollection();
+    }
+
+    // Геттеры и сеттеры
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): static
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getBeds(): ?int
+    {
+        return $this->beds;
+    }
+
+    public function setBeds(int $beds): static
+    {
+        $this->beds = $beds;
+        return $this;
+    }
+
+    public function getAmenities(): ?string
+    {
+        return $this->amenities;
+    }
+
+    public function setAmenities(?string $amenities): static
+    {
+        $this->amenities = $amenities;
+        return $this;
+    }
+
+    public function getDistanceToSea(): ?int
+    {
+        return $this->distanceToSea;
+    }
+
+    public function setDistanceToSea(int $distanceToSea): static
+    {
+        $this->distanceToSea = $distanceToSea;
+        return $this;
+    }
+
+    public function getPricePerNight(): ?string
+    {
+        return $this->pricePerNight;
+    }
+
+    public function setPricePerNight(string $pricePerNight): static
+    {
+        $this->pricePerNight = $pricePerNight;
+        return $this;
+    }
+
+    public function isIsAvailable(): ?bool
+    {
+        return $this->isAvailable;
+    }
+
+    public function setIsAvailable(bool $isAvailable): static
+    {
+        $this->isAvailable = $isAvailable;
+        return $this;
+    }
+
+
+    /**
+     * @return Collection<int, Booking>
+     */
+    public function getBookings(): Collection
+    {
+        return $this->bookings;
+    }
+
+    public function addBooking(Booking $booking): static
+    {
+        if (!$this->bookings->contains($booking)) {
+            $this->bookings->add($booking);
+            $booking->setHouse($this);
+        }
+        return $this;
+    }
+
+    public function removeBooking(Booking $booking): static
+    {
+        if ($this->bookings->removeElement($booking)) {
+            // set the owning side to null (unless already changed)
+            if ($booking->getHouse() === $this) {
+                $booking->setHouse(null);
+            }
+        }
+        return $this;
+    }
+
+    public function toArray(): array
+    {
         return [
             'id' => $this->id,
             'name' => $this->name,
             'beds' => $this->beds,
             'amenities' => $this->amenities,
             'distance_to_sea' => $this->distanceToSea,
-            'price_per_night' => $this->pricePerNight
+            'price_per_night' => $this->pricePerNight,
+            'is_available' => $this->isAvailable,
         ];
     }
 }
