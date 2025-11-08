@@ -2,82 +2,86 @@
 
 namespace App\Controller;
 
-use App\Services\ServicesCSV;
+use App\Services\BookingService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
+#[Route('/api/bookings')]
 class BookingController extends AbstractController
 {
-    private ServicesCSV $csvService;
+    private BookingService $bookingService;
 
-    public function __construct(ServicesCSV $csvService)
+    public function __construct(BookingService $bookingService)
     {
-        $this->csvService = $csvService;
+        $this->bookingService = $bookingService;
     }
 
-    #[Route('/api/bookings', name: 'create_booking', methods: ['POST'])]
-    public function createBooking(Request $request): JsonResponse {
-        $data = json_decode($request->getContent(), true);
-        
-        if (!isset($data['house_id']) || !isset($data['phone'])) {
-            return $this->json(['error' => 'Missing required fields: house_id and phone'], 400);
+    #[Route('', name: 'create_booking', methods: ['POST'])]
+    public function createBooking(Request $request): JsonResponse 
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $result = $this->bookingService->createBooking($data);
+            
+            return $this->json($result, 201);
+            
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Failed to create booking: ' . $e->getMessage()], 500);
         }
-        
-        $houseId = (int)$data['house_id'];
-        $phone = $data['phone'];
-        $comment = $data['comment'] ?? '';
-        
-        $house = $this->csvService->getHouseById($houseId);
-        if (!$house) {
-            return $this->json(['error' => 'House not found'], 404);
-        }
-        
-        $success = $this->csvService->createBooking($houseId, $phone, $comment);
-        
-        if ($success) {
-            return $this->json(['message' => 'Booking created successfully']);
-        }
-        
-        return $this->json(['error' => 'Failed to create booking'], 500);
     }
 
-    #[Route('/api/bookings/{id}', name: 'update_booking', methods: ['PUT'])]
-    public function updateBooking(int $id, Request $request): JsonResponse {
-        $data = json_decode($request->getContent(), true);
-        
-        if (!isset($data['comment'])) {
-            return $this->json(['error' => 'Comment is required'], 400);
+    #[Route('/{id}', name: 'update_booking', methods: ['PUT'])]
+    public function updateBooking(int $id, Request $request): JsonResponse 
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            
+            if (!isset($data['comment'])) {
+                return $this->json(['error' => 'Comment is required'], 400);
+            }
+            
+            $result = $this->bookingService->updateBookingComment($id, $data['comment']);
+            
+            return $this->json($result);
+            
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Failed to update booking: ' . $e->getMessage()], 500);
         }
-        
-        $booking = $this->csvService->getBookingById($id);
-        if (!$booking) {
-            return $this->json(['error' => 'Booking not found'], 404);
-        }
-        
-        $success = $this->csvService->updateBooking($id, $data['comment']);
-        
-        if ($success) {
-            return $this->json(['message' => 'Booking updated successfully']);
-        }
-        
-        return $this->json(['error' => 'Failed to update booking'], 500);
     }
 
-    #[Route('/api/bookings/{id}', name: 'delete_booking', methods: ['DELETE'])]
-    public function deleteBooking(int $id): JsonResponse {
-        $booking = $this->csvService->getBookingById($id);
-        if (!$booking) {
-            return $this->json(['error' => 'Booking not found'], 404);
-        }
-        
-        $success = $this->csvService->deleteBooking($id);
-        
-        if ($success) {
+    #[Route('/{id}', name: 'delete_booking', methods: ['DELETE'])]
+    public function deleteBooking(int $id): JsonResponse 
+    {
+        try {
+            $this->bookingService->deleteBooking($id);
             return $this->json(['message' => 'Booking deleted successfully']);
+            
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Failed to delete booking: ' . $e->getMessage()], 500);
         }
-        
-        return $this->json(['error' => 'Failed to delete booking'], 500);
+    }
+
+    #[Route('/{id}', name: 'get_booking', methods: ['GET'])]
+    public function getBooking(int $id): JsonResponse
+    {
+        try {
+            $booking = $this->bookingService->getBookingById($id);
+            if (!$booking) {
+                return $this->json(['error' => 'Booking not found'], 404);
+            }
+            
+            return $this->json(['booking' => $booking->toArray()]);
+            
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

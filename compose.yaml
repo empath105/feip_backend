@@ -46,6 +46,4 @@ services:
 volumes:
     postgres_data:
 
-networks:
-    nginx-php-database:
 
