@@ -10,6 +10,7 @@ use App\Repository\UserRepository;
 use App\Services\UserService;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -19,15 +20,18 @@ class UserServiceTest extends TestCase
     private UserService $userService;
     private UserRepository $userRepository;
     private ValidatorInterface $validator;
+    private UserPasswordHasherInterface $passwordHasher;
 
     protected function setUp(): void
     {
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
+        $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
 
         $this->userService = new UserService(
             $this->userRepository,
-            $this->validator
+            $this->validator,
+            $this->passwordHasher
         );
     }
 
@@ -37,11 +41,15 @@ class UserServiceTest extends TestCase
             'email' => 'test@example.com',
             'phone' => '+79991234567',
             'name' => 'Test User',
+            'password' => 'test123',
         ];
 
         $this->userRepository->method('findByEmail')->willReturn(null);
         $this->userRepository->method('findByPhone')->willReturn(null);
         $this->validator->method('validate')->willReturn(new ConstraintViolationList());
+
+        $this->passwordHasher->method('hashPassword')
+            ->willReturn('hashed_password');
 
         $this->userRepository->expects($this->once())
             ->method('save')
@@ -54,12 +62,53 @@ class UserServiceTest extends TestCase
         $this->assertEquals('test@example.com', $result['user']['email']);
     }
 
+    public function testCreateUserWithRoles(): void
+    {
+        $userData = [
+            'email' => 'admin@example.com',
+            'phone' => '+79991234568',
+            'name' => 'Admin',
+            'password' => 'admin123',
+            'roles' => ['ROLE_ADMIN'],
+        ];
+
+        $this->userRepository->method('findByEmail')->willReturn(null);
+        $this->userRepository->method('findByPhone')->willReturn(null);
+        $this->validator->method('validate')->willReturn(new ConstraintViolationList());
+        $this->passwordHasher->method('hashPassword')->willReturn('hashed');
+
+        $this->userRepository->expects($this->once())
+            ->method('save')
+            ->with($this->callback(function (User $user) {
+                return in_array('ROLE_ADMIN', $user->getRoles());
+            }));
+
+        $result = $this->userService->createUser($userData);
+
+        $this->assertEquals('User created successfully', $result['message']);
+    }
+
+    public function testCreateUserWithMissingPassword(): void
+    {
+        $userData = [
+            'email' => 'test@example.com',
+            'phone' => '+79991234567',
+            'name' => 'Test User',
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Missing required fields: email, phone, name, password');
+
+        $this->userService->createUser($userData);
+    }
+
     public function testCreateUserWithExistingEmail(): void
     {
         $userData = [
             'email' => 'existing@example.com',
             'phone' => '+79991234567',
             'name' => 'Test User',
+            'password' => 'test123',
         ];
 
         $existingUser = new User();
@@ -77,6 +126,7 @@ class UserServiceTest extends TestCase
             'email' => 'test@example.com',
             'phone' => '+79998887766',
             'name' => 'Test User',
+            'password' => 'test123',
         ];
 
         $existingUser = new User();
@@ -93,7 +143,7 @@ class UserServiceTest extends TestCase
         $userData = ['email' => 'test@example.com'];
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing required fields: email, phone, name');
+        $this->expectExceptionMessage('Missing required fields: email, phone, name, password');
 
         $this->userService->createUser($userData);
     }
@@ -104,6 +154,7 @@ class UserServiceTest extends TestCase
             'email' => 'invalid-email',
             'phone' => '+79991234567',
             'name' => 'Test User',
+            'password' => 'test123',
         ];
 
         $this->userRepository->method('findByEmail')->willReturn(null);

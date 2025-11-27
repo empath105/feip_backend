@@ -8,10 +8,10 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class BookingControllerTest extends WebTestCase
 {
-    private function createTestUser($client)
+    private function createUserAndGetToken($client): array
     {
-        $uniqueEmail = 'booking-user-' . uniqid() . '@example.com';
         $uniquePhone = '+7999' . rand(1000000, 9999999);
+        $password = 'test123';
 
         $client->request(
             'POST',
@@ -20,16 +20,36 @@ class BookingControllerTest extends WebTestCase
             [],
             ['CONTENT_TYPE' => 'application/json'],
             json_encode([
-                'email' => $uniqueEmail,
                 'phone' => $uniquePhone,
+                'email' => 'booking-test-' . uniqid() . '@example.com',
                 'name' => 'Booking Test User',
+                'password' => $password,
             ])
         );
 
-        return json_decode($client->getResponse()->getContent(), true)['user'];
+        $userData = json_decode($client->getResponse()->getContent(), true);
+
+        $client->request(
+            'POST',
+            '/api/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'phone' => $uniquePhone,
+                'password' => $password,
+            ])
+        );
+
+        $loginData = json_decode($client->getResponse()->getContent(), true);
+
+        return [
+            'token' => $loginData['token'],
+            'user' => $userData['user'],
+        ];
     }
 
-    private function createTestHouse($client)
+    private function createTestHouse($client, $token): array
     {
         $uniqueName = 'Booking House ' . uniqid();
 
@@ -38,7 +58,10 @@ class BookingControllerTest extends WebTestCase
             '/api/houses',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'name' => $uniqueName,
                 'beds' => 2,
@@ -54,15 +77,21 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $user = $this->createTestUser($client);
-        $house = $this->createTestHouse($client);
+        $authData = $this->createUserAndGetToken($client);
+        $token = $authData['token'];
+        $user = $authData['user'];
+
+        $house = $this->createTestHouse($client, $token);
 
         $client->request(
             'POST',
             '/api/bookings',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'user_id' => $user['id'],
                 'house_id' => $house['id'],
@@ -84,14 +113,20 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $house = $this->createTestHouse($client);
+        $authData = $this->createUserAndGetToken($client);
+        $token = $authData['token'];
+
+        $house = $this->createTestHouse($client, $token);
 
         $client->request(
             'POST',
             '/api/bookings',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'user_id' => 999999,
                 'house_id' => $house['id'],
@@ -106,15 +141,21 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $user = $this->createTestUser($client);
-        $house = $this->createTestHouse($client);
+        $authData = $this->createUserAndGetToken($client);
+        $token = $authData['token'];
+        $user = $authData['user'];
+
+        $house = $this->createTestHouse($client, $token);
 
         $client->request(
             'POST',
             '/api/bookings',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'user_id' => $user['id'],
                 'house_id' => $house['id'],
@@ -130,7 +171,10 @@ class BookingControllerTest extends WebTestCase
             "/api/bookings/{$bookingId}",
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'comment' => 'Updated Comment ' . uniqid(),
             ])
@@ -146,15 +190,21 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $user = $this->createTestUser($client);
-        $house = $this->createTestHouse($client);
+        $authData = $this->createUserAndGetToken($client);
+        $token = $authData['token'];
+        $user = $authData['user'];
+
+        $house = $this->createTestHouse($client, $token);
 
         $client->request(
             'POST',
             '/api/bookings',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'user_id' => $user['id'],
                 'house_id' => $house['id'],
@@ -165,7 +215,13 @@ class BookingControllerTest extends WebTestCase
         $bookingData = json_decode($client->getResponse()->getContent(), true);
         $bookingId = $bookingData['booking']['id'];
 
-        $client->request('GET', "/api/bookings/{$bookingId}");
+        $client->request(
+            'GET',
+            "/api/bookings/{$bookingId}",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
@@ -178,15 +234,21 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $user = $this->createTestUser($client);
-        $house = $this->createTestHouse($client);
+        $authData = $this->createUserAndGetToken($client);
+        $token = $authData['token'];
+        $user = $authData['user'];
+
+        $house = $this->createTestHouse($client, $token);
 
         $client->request(
             'POST',
             '/api/bookings',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'user_id' => $user['id'],
                 'house_id' => $house['id'],
@@ -197,14 +259,27 @@ class BookingControllerTest extends WebTestCase
         $bookingData = json_decode($client->getResponse()->getContent(), true);
         $bookingId = $bookingData['booking']['id'];
 
-        $client->request('DELETE', "/api/bookings/{$bookingId}");
+        $client->request(
+            'DELETE',
+            "/api/bookings/{$bookingId}",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
         $responseData = json_decode($client->getResponse()->getContent(), true);
         $this->assertEquals('Booking deleted successfully', $responseData['message']);
 
-        $client->request('GET', "/api/bookings/{$bookingId}");
+        $client->request(
+            'GET',
+            "/api/bookings/{$bookingId}",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
+
         $this->assertEquals(400, $client->getResponse()->getStatusCode());
     }
 }

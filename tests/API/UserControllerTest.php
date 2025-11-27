@@ -25,6 +25,7 @@ class UserControllerTest extends WebTestCase
                 'email' => $uniqueEmail,
                 'phone' => $uniquePhone,
                 'name' => 'Test User',
+                'password' => 'test123',
             ])
         );
 
@@ -51,6 +52,7 @@ class UserControllerTest extends WebTestCase
                 'email' => $email,
                 'phone' => '+7999' . rand(1000000, 9999999),
                 'name' => 'First User',
+                'password' => 'test123',
             ])
         );
         $this->assertEquals(201, $client->getResponse()->getStatusCode());
@@ -65,6 +67,7 @@ class UserControllerTest extends WebTestCase
                 'email' => $email,
                 'phone' => '+7999' . rand(1000000, 9999999),
                 'name' => 'Second User',
+                'password' => 'test123',
             ])
         );
 
@@ -75,7 +78,48 @@ class UserControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client->request('GET', '/api/users');
+        $uniqueEmail = 'test-getall-' . uniqid() . '@example.com';
+        $uniquePhone = '+7999' . rand(1000000, 9999999);
+        $password = 'test123';
+
+        $client->request(
+            'POST',
+            '/api/users',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'email' => $uniqueEmail,
+                'phone' => $uniquePhone,
+                'name' => 'Test Get All User',
+                'password' => $password,
+            ])
+        );
+
+        $this->assertEquals(201, $client->getResponse()->getStatusCode());
+
+        $client->request(
+            'POST',
+            '/api/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'phone' => $uniquePhone,
+                'password' => $password,
+            ])
+        );
+
+        $loginData = json_decode($client->getResponse()->getContent(), true);
+        $token = $loginData['token'];
+
+        $client->request(
+            'GET',
+            '/api/users',
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
@@ -89,6 +133,9 @@ class UserControllerTest extends WebTestCase
         $client = static::createClient();
 
         $uniqueEmail = 'get-test-' . uniqid() . '@example.com';
+        $uniquePhone = '+7999' . rand(1000000, 9999999);
+        $password = 'test123';
+
         $client->request(
             'POST',
             '/api/users',
@@ -97,15 +144,37 @@ class UserControllerTest extends WebTestCase
             ['CONTENT_TYPE' => 'application/json'],
             json_encode([
                 'email' => $uniqueEmail,
-                'phone' => '+7999' . rand(1000000, 9999999),
+                'phone' => $uniquePhone,
                 'name' => 'Get Test User',
+                'password' => $password,
             ])
         );
 
         $createResponse = json_decode($client->getResponse()->getContent(), true);
         $userId = $createResponse['user']['id'];
 
-        $client->request('GET', "/api/users/{$userId}");
+        $client->request(
+            'POST',
+            '/api/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'phone' => $uniquePhone,
+                'password' => $password,
+            ])
+        );
+
+        $loginData = json_decode($client->getResponse()->getContent(), true);
+        $token = $loginData['token'];
+
+        $client->request(
+            'GET',
+            "/api/users/{$userId}",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
@@ -119,6 +188,9 @@ class UserControllerTest extends WebTestCase
         $client = static::createClient();
 
         $uniqueEmail = 'delete-test-' . uniqid() . '@example.com';
+        $uniquePhone = '+7999' . rand(1000000, 9999999);
+        $password = 'test123';
+
         $client->request(
             'POST',
             '/api/users',
@@ -127,18 +199,64 @@ class UserControllerTest extends WebTestCase
             ['CONTENT_TYPE' => 'application/json'],
             json_encode([
                 'email' => $uniqueEmail,
-                'phone' => '+7999' . rand(1000000, 9999999),
+                'phone' => $uniquePhone,
                 'name' => 'Delete Test User',
+                'password' => $password,
             ])
         );
         $userData = json_decode($client->getResponse()->getContent(), true);
         $userId = $userData['user']['id'];
 
-        $client->request('DELETE', "/api/users/{$userId}");
+        $client->request(
+            'POST',
+            '/api/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'phone' => $uniquePhone,
+                'password' => $password,
+            ])
+        );
+
+        $loginData = json_decode($client->getResponse()->getContent(), true);
+        $token = $loginData['token'];
+
+        $client->request(
+            'DELETE',
+            "/api/users/{$userId}",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
         $responseData = json_decode($client->getResponse()->getContent(), true);
         $this->assertEquals('User deleted successfully', $responseData['message']);
+    }
+
+    public function testAccessProtectedRouteWithoutToken(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/api/users');
+
+        $this->assertEquals(401, $client->getResponse()->getStatusCode());
+    }
+
+    public function testAccessWithInvalidToken(): void
+    {
+        $client = static::createClient();
+
+        $client->request(
+            'GET',
+            '/api/users',
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer invalid_token_here']
+        );
+
+        $this->assertEquals(401, $client->getResponse()->getStatusCode());
     }
 }

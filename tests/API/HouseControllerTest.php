@@ -8,16 +8,62 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class HouseControllerTest extends WebTestCase
 {
+    private function createUserAndGetToken($client): string
+    {
+        $uniqueEmail = 'house-test-' . uniqid() . '@example.com';
+        $uniquePhone = '+7999' . rand(1000000, 9999999);
+        $password = 'test123';
+
+        $client->request(
+            'POST',
+            '/api/users',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'phone' => $uniquePhone,
+                'email' => $uniqueEmail,
+                'name' => 'House Test User',
+                'password' => $password,
+            ])
+        );
+
+        $this->assertResponseStatusCodeSame(201, 'Failed to create user');
+
+        $client->request(
+            'POST',
+            '/api/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'phone' => $uniquePhone,
+                'password' => $password,
+            ])
+        );
+
+        $this->assertResponseIsSuccessful('Login failed');
+
+        $loginData = json_decode($client->getResponse()->getContent(), true);
+
+        return $loginData['token'];
+    }
+
     public function testCreateHouse(): void
     {
         $client = static::createClient();
+
+        $token = $this->createUserAndGetToken($client);
 
         $client->request(
             'POST',
             '/api/houses',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'name' => 'API Test House',
                 'beds' => 3,
@@ -38,11 +84,40 @@ class HouseControllerTest extends WebTestCase
         $this->assertEquals('API Test House', $responseData['house']['name']);
     }
 
+    public function testCreateHouseWithoutToken(): void
+    {
+        $client = static::createClient();
+
+        $client->request(
+            'POST',
+            '/api/houses',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'name' => 'Unauthorized House',
+                'beds' => 2,
+                'distance_to_sea' => 1,
+                'price_per_night' => 3000,
+            ])
+        );
+
+        $this->assertResponseStatusCodeSame(401, 'Should require token for creating house');
+    }
+
     public function testGetAvailableHouses(): void
     {
         $client = static::createClient();
 
-        $client->request('GET', '/api/houses/available');
+        $token = $this->createUserAndGetToken($client);
+
+        $client->request(
+            'GET',
+            '/api/houses/available',
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertResponseIsSuccessful();
 
@@ -54,12 +129,17 @@ class HouseControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
+        $token = $this->createUserAndGetToken($client);
+
         $client->request(
             'POST',
             '/api/houses',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'name' => 'Get Test House',
                 'beds' => 2,
@@ -72,7 +152,13 @@ class HouseControllerTest extends WebTestCase
         $createResponse = json_decode($client->getResponse()->getContent(), true);
         $houseId = $createResponse['house']['id'];
 
-        $client->request('GET', "/api/houses/{$houseId}");
+        $client->request(
+            'GET',
+            "/api/houses/{$houseId}",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertResponseIsSuccessful();
 
@@ -84,12 +170,17 @@ class HouseControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
+        $token = $this->createUserAndGetToken($client);
+
         $client->request(
             'POST',
             '/api/houses',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'name' => 'Bookings House',
                 'beds' => 2,
@@ -101,7 +192,13 @@ class HouseControllerTest extends WebTestCase
         $houseData = json_decode($client->getResponse()->getContent(), true);
         $houseId = $houseData['house']['id'];
 
-        $client->request('GET', "/api/houses/{$houseId}/bookings");
+        $client->request(
+            'GET',
+            "/api/houses/{$houseId}/bookings",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertResponseIsSuccessful();
 
@@ -114,12 +211,17 @@ class HouseControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
+        $token = $this->createUserAndGetToken($client);
+
         $client->request(
             'POST',
             '/api/houses',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
             json_encode([
                 'name' => 'Delete Test House',
                 'beds' => 1,
@@ -131,14 +233,27 @@ class HouseControllerTest extends WebTestCase
         $houseData = json_decode($client->getResponse()->getContent(), true);
         $houseId = $houseData['house']['id'];
 
-        $client->request('DELETE', "/api/houses/{$houseId}");
+        $client->request(
+            'DELETE',
+            "/api/houses/{$houseId}",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
 
         $this->assertResponseIsSuccessful();
 
         $responseData = json_decode($client->getResponse()->getContent(), true);
         $this->assertEquals('House deleted successfully', $responseData['message']);
 
-        $client->request('GET', "/api/houses/{$houseId}");
+        $client->request(
+            'GET',
+            "/api/houses/{$houseId}",
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
+
         $this->assertResponseStatusCodeSame(400);
     }
 }
