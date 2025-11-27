@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\tests\Unit;
 
-use App\Entity\House;
 use App\Entity\Booking;
+use App\Entity\House;
 use App\Repository\HouseRepository;
 use App\Services\HouseService;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -21,7 +23,7 @@ class HouseServiceTest extends TestCase
     {
         $this->houseRepository = $this->createMock(HouseRepository::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
-        
+
         $this->houseService = new HouseService(
             $this->houseRepository,
             $this->validator
@@ -35,7 +37,7 @@ class HouseServiceTest extends TestCase
             'beds' => 2,
             'amenities' => 'WiFi, TV',
             'distance_to_sea' => 1,
-            'price_per_night' => 5000
+            'price_per_night' => 5000,
         ];
 
         $this->validator->method('validate')->willReturn(new ConstraintViolationList());
@@ -55,7 +57,7 @@ class HouseServiceTest extends TestCase
     {
         $houseData = ['name' => 'Test House'];
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required field: beds');
 
         $this->houseService->createHouse($houseData);
@@ -114,7 +116,7 @@ class HouseServiceTest extends TestCase
     {
         $this->houseRepository->method('find')->with(999)->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('House not found');
 
         $this->houseService->deleteHouse(999);
@@ -125,7 +127,7 @@ class HouseServiceTest extends TestCase
         $house = new House();
         $booking1 = new Booking();
         $booking2 = new Booking();
-        
+
         $house->addBooking($booking1);
         $house->addBooking($booking2);
 
@@ -141,7 +143,7 @@ class HouseServiceTest extends TestCase
     {
         $this->houseRepository->method('find')->with(999)->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('House not found');
 
         $this->houseService->getHouseBookings(999);

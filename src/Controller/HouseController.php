@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Services\HouseService;
+use Exception;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/api/houses')]
@@ -23,14 +29,18 @@ class HouseController extends AbstractController
     {
         try {
             $data = json_decode($request->getContent(), true);
+
+            if (null === $data) {
+                throw new BadRequestHttpException('Invalid JSON data');
+            }
+
             $result = $this->houseService->createHouse($data);
-            
+
             return $this->json($result, 201);
-            
-        } catch (\InvalidArgumentException $e) {
-            return $this->json(['error' => $e->getMessage()], 400);
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Failed to create house: ' . $e->getMessage()], 500);
+        } catch (InvalidArgumentException $e) {
+            throw new BadRequestHttpException($e->getMessage());
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to create house: ' . $e->getMessage());
         }
     }
 
@@ -39,16 +49,15 @@ class HouseController extends AbstractController
     {
         try {
             $houses = $this->houseService->getAvailableHouses();
-            
+
             $housesArray = [];
             foreach ($houses as $house) {
                 $housesArray[] = $house->toArray();
             }
-            
+
             return $this->json($housesArray, 200, [], ['json_encode_options' => JSON_UNESCAPED_UNICODE]);
-            
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to get available houses: ' . $e->getMessage());
         }
     }
 
@@ -57,15 +66,14 @@ class HouseController extends AbstractController
     {
         try {
             $house = $this->houseService->getHouseById($id);
-            
+
             if (!$house) {
-                return $this->json(['error' => 'House not found'], 404);
+                throw new NotFoundHttpException('House not found');
             }
-            
+
             return $this->json($house->toArray(), 200, [], ['json_encode_options' => JSON_UNESCAPED_UNICODE]);
-            
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to get house: ' . $e->getMessage());
         }
     }
 
@@ -74,13 +82,12 @@ class HouseController extends AbstractController
     {
         try {
             $this->houseService->deleteHouse($id);
-            
+
             return $this->json(['message' => 'House deleted successfully']);
-            
-        } catch (\InvalidArgumentException $e) {
-            return $this->json(['error' => $e->getMessage()], 404);
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Failed to delete house: ' . $e->getMessage()], 500);
+        } catch (InvalidArgumentException $e) {
+            throw new NotFoundHttpException($e->getMessage());
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to delete house: ' . $e->getMessage());
         }
     }
 
@@ -89,13 +96,12 @@ class HouseController extends AbstractController
     {
         try {
             $bookings = $this->houseService->getHouseBookings($id);
-            
+
             return $this->json(['bookings' => $bookings]);
-            
-        } catch (\InvalidArgumentException $e) {
-            return $this->json(['error' => $e->getMessage()], 404);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (InvalidArgumentException $e) {
+            throw new NotFoundHttpException($e->getMessage());
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to get house bookings: ' . $e->getMessage());
         }
     }
 }

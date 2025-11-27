@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\HouseRepository;
@@ -37,7 +39,6 @@ class House
     #[ORM\OneToMany(mappedBy: 'house', targetEntity: Booking::class, cascade: ['remove'])]
     private Collection $bookings;
 
-
     public function __construct()
     {
         $this->bookings = new ArrayCollection();
@@ -57,6 +58,7 @@ class House
     public function setName(string $name): static
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -68,6 +70,7 @@ class House
     public function setBeds(int $beds): static
     {
         $this->beds = $beds;
+
         return $this;
     }
 
@@ -79,6 +82,7 @@ class House
     public function setAmenities(?string $amenities): static
     {
         $this->amenities = $amenities;
+
         return $this;
     }
 
@@ -90,6 +94,7 @@ class House
     public function setDistanceToSea(int $distanceToSea): static
     {
         $this->distanceToSea = $distanceToSea;
+
         return $this;
     }
 
@@ -101,6 +106,7 @@ class House
     public function setPricePerNight(string $pricePerNight): static
     {
         $this->pricePerNight = $pricePerNight;
+
         return $this;
     }
 
@@ -112,9 +118,9 @@ class House
     public function setIsAvailable(bool $isAvailable): static
     {
         $this->isAvailable = $isAvailable;
+
         return $this;
     }
-
 
     /**
      * @return Collection<int, Booking>
@@ -130,6 +136,7 @@ class House
             $this->bookings->add($booking);
             $booking->setHouse($this);
         }
+
         return $this;
     }
 
@@ -141,6 +148,7 @@ class House
                 $booking->setHouse(null);
             }
         }
+
         return $this;
     }
 

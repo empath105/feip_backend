@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/squizlabs/php_codesniffer/phpcs.xsd">
+
+    <arg name="basepath" value="."/>
+    <arg name="cache" value=".phpcs-cache"/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+
+    <rule ref="PSR12"/>
+
+    <file>src</file>
+    <file>tests</file>
+    <file>config</file>
+    <file>public</file>
+
+    <exclude-pattern>vendor</exclude-pattern>
+    <exclude-pattern>var</exclude-pattern>
+    <exclude-pattern>migrations</exclude-pattern>
+    <exclude-pattern>bin</exclude-pattern>
+    
+    <rule ref="Generic.Metrics.NestingLevel">
+        <properties>
+            <property name="nestingLevel" value="4"/>
+            <property name="absoluteNestingLevel" value="5"/>
+        </properties>
+    </rule>
+
+</ruleset>

@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\tests\Unit;
 
 use App\Entity\Booking;
-use App\Entity\User;
 use App\Entity\House;
+use App\Entity\User;
 use App\Repository\BookingRepository;
-use App\Repository\UserRepository;
 use App\Repository\HouseRepository;
+use App\Repository\UserRepository;
 use App\Services\BookingService;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -28,7 +30,7 @@ class BookingServiceTest extends TestCase
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->houseRepository = $this->createMock(HouseRepository::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
-        
+
         $this->bookingService = new BookingService(
             $this->bookingRepository,
             $this->userRepository,
@@ -42,7 +44,7 @@ class BookingServiceTest extends TestCase
         $bookingData = [
             'user_id' => 1,
             'house_id' => 1,
-            'comment' => 'Test booking'
+            'comment' => 'Test booking',
         ];
 
         $user = new User();
@@ -70,7 +72,7 @@ class BookingServiceTest extends TestCase
     {
         $bookingData = ['comment' => 'Test booking'];
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required fields: user_id and house_id');
 
         $this->bookingService->createBooking($bookingData);
@@ -81,7 +83,7 @@ class BookingServiceTest extends TestCase
         $bookingData = [
             'user_id' => 999,
             'house_id' => 1,
-            'comment' => 'Test booking'
+            'comment' => 'Test booking',
         ];
 
         $house = new House();
@@ -90,7 +92,7 @@ class BookingServiceTest extends TestCase
         $this->userRepository->method('find')->with(999)->willReturn(null);
         $this->houseRepository->method('find')->with(1)->willReturn($house);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('User not found');
 
         $this->bookingService->createBooking($bookingData);
@@ -101,7 +103,7 @@ class BookingServiceTest extends TestCase
         $bookingData = [
             'user_id' => 1,
             'house_id' => 999,
-            'comment' => 'Test booking'
+            'comment' => 'Test booking',
         ];
 
         $user = new User();
@@ -110,7 +112,7 @@ class BookingServiceTest extends TestCase
         $this->userRepository->method('find')->with(1)->willReturn($user);
         $this->houseRepository->method('find')->with(999)->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('House not found');
 
         $this->bookingService->createBooking($bookingData);
@@ -121,7 +123,7 @@ class BookingServiceTest extends TestCase
         $bookingData = [
             'user_id' => 1,
             'house_id' => 1,
-            'comment' => 'Test booking'
+            'comment' => 'Test booking',
         ];
 
         $user = new User();
@@ -133,7 +135,7 @@ class BookingServiceTest extends TestCase
         $this->userRepository->method('find')->with(1)->willReturn($user);
         $this->houseRepository->method('find')->with(1)->willReturn($house);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('House is not available for booking');
 
         $this->bookingService->createBooking($bookingData);
@@ -158,7 +160,7 @@ class BookingServiceTest extends TestCase
     {
         $this->bookingRepository->method('find')->with(999)->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Booking not found');
 
         $this->bookingService->updateBookingComment(999, 'Updated comment');
@@ -201,7 +203,7 @@ class BookingServiceTest extends TestCase
     {
         $this->bookingRepository->method('find')->with(999)->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Booking not found');
 
         $this->bookingService->deleteBooking(999);

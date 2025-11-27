@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\Booking;
-use App\Entity\User;
 use App\Entity\House;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -36,7 +38,7 @@ class BookingRepository extends ServiceEntityRepository
     public function save(Booking $booking, bool $flush = true): void
     {
         $this->getEntityManager()->persist($booking);
-        
+
         if ($flush) {
             $this->getEntityManager()->flush();
         }
@@ -45,7 +47,7 @@ class BookingRepository extends ServiceEntityRepository
     public function remove(Booking $booking, bool $flush = true): void
     {
         $this->getEntityManager()->remove($booking);
-        
+
         if ($flush) {
             $this->getEntityManager()->flush();
         }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\User;
@@ -29,7 +31,7 @@ class UserRepository extends ServiceEntityRepository
     public function save(User $user, bool $flush = true): void
     {
         $this->getEntityManager()->persist($user);
-        
+
         if ($flush) {
             $this->getEntityManager()->flush();
         }
@@ -38,7 +40,7 @@ class UserRepository extends ServiceEntityRepository
     public function remove(User $user, bool $flush = true): void
     {
         $this->getEntityManager()->remove($user);
-        
+
         if ($flush) {
             $this->getEntityManager()->flush();
         }
