@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Entity\Booking;
 use App\Repository\BookingRepository;
-use App\Repository\UserRepository;
 use App\Repository\HouseRepository;
+use App\Repository\UserRepository;
+use InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class BookingService
@@ -19,7 +22,7 @@ class BookingService
         BookingRepository $bookingRepository,
         UserRepository $userRepository,
         HouseRepository $houseRepository,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
     ) {
         $this->bookingRepository = $bookingRepository;
         $this->userRepository = $userRepository;
@@ -30,25 +33,25 @@ class BookingService
     public function createBooking(array $data): array
     {
         if (!isset($data['user_id']) || !isset($data['house_id'])) {
-            throw new \InvalidArgumentException('Missing required fields: user_id and house_id');
+            throw new InvalidArgumentException('Missing required fields: user_id and house_id');
         }
 
-        $userId = (int)$data['user_id'];
-        $houseId = (int)$data['house_id'];
+        $userId = (int) $data['user_id'];
+        $houseId = (int) $data['house_id'];
         $comment = $data['comment'] ?? '';
 
         $user = $this->userRepository->find($userId);
         if (!$user) {
-            throw new \InvalidArgumentException('User not found');
+            throw new InvalidArgumentException('User not found');
         }
 
         $house = $this->houseRepository->find($houseId);
         if (!$house) {
-            throw new \InvalidArgumentException('House not found');
+            throw new InvalidArgumentException('House not found');
         }
 
         if (!$house->isIsAvailable()) {
-            throw new \InvalidArgumentException('House is not available for booking');
+            throw new InvalidArgumentException('House is not available for booking');
         }
 
         $booking = new Booking();
@@ -63,14 +66,14 @@ class BookingService
             foreach ($errors as $error) {
                 $errorMessages[] = $error->getMessage();
             }
-            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errorMessages));
+            throw new InvalidArgumentException('Validation failed: ' . implode(', ', $errorMessages));
         }
 
         $this->bookingRepository->save($booking);
 
         return [
             'message' => 'Booking created successfully',
-            'booking' => $booking->toArray()
+            'booking' => $booking->toArray(),
         ];
     }
 
@@ -78,7 +81,7 @@ class BookingService
     {
         $booking = $this->bookingRepository->find($id);
         if (!$booking) {
-            throw new \InvalidArgumentException('Booking not found');
+            throw new InvalidArgumentException('Booking not found');
         }
 
         $booking->setComment($comment);
@@ -87,7 +90,7 @@ class BookingService
 
         return [
             'message' => 'Booking updated successfully',
-            'booking' => $booking->toArray()
+            'booking' => $booking->toArray(),
         ];
     }
 
@@ -100,7 +103,7 @@ class BookingService
     {
         $booking = $this->bookingRepository->find($id);
         if (!$booking) {
-            throw new \InvalidArgumentException('Booking not found');
+            throw new InvalidArgumentException('Booking not found');
         }
 
         $this->bookingRepository->remove($booking);

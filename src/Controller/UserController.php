@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Services\UserService;
+use Exception;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
-
 
 #[Route('/api/users')]
 class UserController extends AbstractController
@@ -24,20 +29,18 @@ class UserController extends AbstractController
     {
         try {
             $data = json_decode($request->getContent(), true);
-            
-            // Добавляем проверку на null
-            if ($data === null) {
-                return $this->json(['error' => 'Invalid JSON data'], 400);
+
+            if (null === $data) {
+                throw new BadRequestHttpException('Invalid JSON data');
             }
-            
+
             $result = $this->userService->createUser($data);
-            
+
             return $this->json($result, 201);
-            
-        } catch (\InvalidArgumentException $e) {
-            return $this->json(['error' => $e->getMessage()], 400);
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500);
+        } catch (InvalidArgumentException $e) {
+            throw new BadRequestHttpException($e->getMessage());
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to create user: ' . $e->getMessage());
         }
     }
 
@@ -46,15 +49,14 @@ class UserController extends AbstractController
     {
         try {
             $user = $this->userService->getUserById($id);
-            
+
             if (!$user) {
-                return $this->json(['error' => 'User not found'], 404);
+                throw new NotFoundHttpException('User not found');
             }
 
             return $this->json(['user' => $user->toArray()]);
-            
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to get user: ' . $e->getMessage());
         }
     }
 
@@ -63,16 +65,15 @@ class UserController extends AbstractController
     {
         try {
             $users = $this->userService->getAllUsers();
-            
+
             $usersArray = [];
             foreach ($users as $user) {
                 $usersArray[] = $user->toArray();
             }
-            
+
             return $this->json(['users' => $usersArray]);
-            
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to get all users: ' . $e->getMessage());
         }
     }
 
@@ -81,13 +82,12 @@ class UserController extends AbstractController
     {
         try {
             $bookings = $this->userService->getUserBookings($id);
-            
+
             return $this->json(['bookings' => $bookings]);
-            
-        } catch (\InvalidArgumentException $e) {
-            return $this->json(['error' => $e->getMessage()], 404);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (InvalidArgumentException $e) {
+            throw new NotFoundHttpException($e->getMessage());
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to get user bookings: ' . $e->getMessage());
         }
     }
 
@@ -96,13 +96,12 @@ class UserController extends AbstractController
     {
         try {
             $this->userService->deleteUser($id);
-            
+
             return $this->json(['message' => 'User deleted successfully']);
-            
-        } catch (\InvalidArgumentException $e) {
-            return $this->json(['error' => $e->getMessage()], 404);
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Failed to delete user: ' . $e->getMessage()], 500);
+        } catch (InvalidArgumentException $e) {
+            throw new NotFoundHttpException($e->getMessage());
+        } catch (Exception $e) {
+            throw new BadRequestHttpException('Failed to delete user: ' . $e->getMessage());
         }
     }
 }

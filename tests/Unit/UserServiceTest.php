@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\tests\Unit;
 
-use App\Entity\User;
 use App\Entity\Booking;
+use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Services\UserService;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -21,7 +24,7 @@ class UserServiceTest extends TestCase
     {
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
-        
+
         $this->userService = new UserService(
             $this->userRepository,
             $this->validator
@@ -33,7 +36,7 @@ class UserServiceTest extends TestCase
         $userData = [
             'email' => 'test@example.com',
             'phone' => '+79991234567',
-            'name' => 'Test User'
+            'name' => 'Test User',
         ];
 
         $this->userRepository->method('findByEmail')->willReturn(null);
@@ -56,13 +59,13 @@ class UserServiceTest extends TestCase
         $userData = [
             'email' => 'existing@example.com',
             'phone' => '+79991234567',
-            'name' => 'Test User'
+            'name' => 'Test User',
         ];
 
         $existingUser = new User();
         $this->userRepository->method('findByEmail')->willReturn($existingUser);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('User with this email already exists');
 
         $this->userService->createUser($userData);
@@ -73,13 +76,13 @@ class UserServiceTest extends TestCase
         $userData = [
             'email' => 'test@example.com',
             'phone' => '+79998887766',
-            'name' => 'Test User'
+            'name' => 'Test User',
         ];
 
         $existingUser = new User();
         $this->userRepository->method('findByPhone')->willReturn($existingUser);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('User with this phone already exists');
 
         $this->userService->createUser($userData);
@@ -89,7 +92,7 @@ class UserServiceTest extends TestCase
     {
         $userData = ['email' => 'test@example.com'];
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required fields: email, phone, name');
 
         $this->userService->createUser($userData);
@@ -100,7 +103,7 @@ class UserServiceTest extends TestCase
         $userData = [
             'email' => 'invalid-email',
             'phone' => '+79991234567',
-            'name' => 'Test User'
+            'name' => 'Test User',
         ];
 
         $this->userRepository->method('findByEmail')->willReturn(null);
@@ -112,7 +115,7 @@ class UserServiceTest extends TestCase
 
         $this->validator->method('validate')->willReturn($violations);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Validation failed: Invalid email format');
 
         $this->userService->createUser($userData);
@@ -173,7 +176,7 @@ class UserServiceTest extends TestCase
     {
         $this->userRepository->method('find')->with(999)->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('User not found');
 
         $this->userService->deleteUser(999);
@@ -184,7 +187,7 @@ class UserServiceTest extends TestCase
         $user = new User();
         $booking1 = new Booking();
         $booking2 = new Booking();
-        
+
         $user->addBooking($booking1);
         $user->addBooking($booking2);
 
@@ -200,7 +203,7 @@ class UserServiceTest extends TestCase
     {
         $this->userRepository->method('find')->with(999)->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('User not found');
 
         $this->userService->getUserBookings(999);

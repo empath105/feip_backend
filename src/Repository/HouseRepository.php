@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\House;
@@ -24,7 +26,7 @@ class HouseRepository extends ServiceEntityRepository
     public function save(House $house, bool $flush = true): void
     {
         $this->getEntityManager()->persist($house);
-        
+
         if ($flush) {
             $this->getEntityManager()->flush();
         }
@@ -33,7 +35,7 @@ class HouseRepository extends ServiceEntityRepository
     public function remove(House $house, bool $flush = true): void
     {
         $this->getEntityManager()->remove($house);
-        
+
         if ($flush) {
             $this->getEntityManager()->flush();
         }

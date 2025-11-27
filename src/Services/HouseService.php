@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Entity\House;
 use App\Repository\HouseRepository;
+use InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class HouseService
@@ -13,7 +16,7 @@ class HouseService
 
     public function __construct(
         HouseRepository $houseRepository,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
     ) {
         $this->houseRepository = $houseRepository;
         $this->validator = $validator;
@@ -24,16 +27,16 @@ class HouseService
         $requiredFields = ['name', 'beds', 'distance_to_sea', 'price_per_night'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field])) {
-                throw new \InvalidArgumentException("Missing required field: $field");
+                throw new InvalidArgumentException("Missing required field: $field");
             }
         }
 
         $house = new House();
         $house->setName($data['name']);
-        $house->setBeds((int)$data['beds']);
+        $house->setBeds((int) $data['beds']);
         $house->setAmenities($data['amenities'] ?? '');
-        $house->setDistanceToSea((int)$data['distance_to_sea']);
-        $house->setPricePerNight((string)$data['price_per_night']);
+        $house->setDistanceToSea((int) $data['distance_to_sea']);
+        $house->setPricePerNight((string) $data['price_per_night']);
         $house->setIsAvailable($data['is_available'] ?? true);
 
         $errors = $this->validator->validate($house);
@@ -42,14 +45,14 @@ class HouseService
             foreach ($errors as $error) {
                 $errorMessages[] = $error->getMessage();
             }
-            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errorMessages));
+            throw new InvalidArgumentException('Validation failed: ' . implode(', ', $errorMessages));
         }
 
         $this->houseRepository->save($house);
 
         return [
             'message' => 'House created successfully',
-            'house' => $house->toArray()
+            'house' => $house->toArray(),
         ];
     }
 
@@ -67,7 +70,7 @@ class HouseService
     {
         $house = $this->houseRepository->find($id);
         if (!$house) {
-            throw new \InvalidArgumentException('House not found');
+            throw new InvalidArgumentException('House not found');
         }
 
         $this->houseRepository->remove($house);
@@ -77,7 +80,7 @@ class HouseService
     {
         $house = $this->houseRepository->find($houseId);
         if (!$house) {
-            throw new \InvalidArgumentException('House not found');
+            throw new InvalidArgumentException('House not found');
         }
 
         $bookings = [];

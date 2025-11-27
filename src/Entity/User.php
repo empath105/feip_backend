@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -13,7 +17,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[ORM\Table(name: 'users')]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 #[UniqueEntity(fields: ['phone'], message: 'There is already an account with this phone')]
-class User {
+class User
+{
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -32,12 +37,12 @@ class User {
     private Collection $bookings;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    private ?DateTimeInterface $createdAt = null;
 
     public function __construct()
     {
         $this->bookings = new ArrayCollection();
-        $this->createdAt = new \DateTime();
+        $this->createdAt = new DateTime();
     }
 
     // Геттеры и сеттеры
@@ -54,6 +59,7 @@ class User {
     public function setEmail(string $email): static
     {
         $this->email = $email;
+
         return $this;
     }
 
@@ -65,6 +71,7 @@ class User {
     public function setPhone(string $phone): static
     {
         $this->phone = $phone;
+
         return $this;
     }
 
@@ -76,17 +83,19 @@ class User {
     public function setName(string $name): static
     {
         $this->name = $name;
+
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): ?DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): static
+    public function setCreatedAt(DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -104,6 +113,7 @@ class User {
             $this->bookings->add($booking);
             $booking->setUser($this);
         }
+
         return $this;
     }
 
@@ -115,6 +125,7 @@ class User {
                 $booking->setUser(null);
             }
         }
+
         return $this;
     }
 

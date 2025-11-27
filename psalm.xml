@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="4"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    cacheDirectory="var/cache/.psalm-cache"
+    ignoreInternalFunctionFalseReturn="false"
+    ignoreInternalFunctionNullReturn="false"
+    ensureArrayIntOffsetsExist="true"
+    ensureArrayStringOffsetsExist="true"
+    strictBinaryOperands="true"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="true"
+>
+    <projectFiles>
+        <directory name="src" />
+        <directory name="tests" />
+        <ignoreFiles>
+            <directory name="vendor" />
+            <directory name="var" />
+            <directory name="bin" />
+            <directory name="migrations" />
+            <file name="config/preload.php" />
+            <file name="public/index.php" />
+            <file name="config/bundles.php" />
+            <file name="importmap.php" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <UnusedClass errorLevel="info">
+            <errorLevel type="suppress">
+                <directory name="src/Controller"/>
+                <directory name="tests"/>
+            </errorLevel>
+        </UnusedClass>
+
+        <PossiblyUnusedMethod errorLevel="info">
+            <errorLevel type="suppress">
+                <directory name="src/Entity"/>
+            </errorLevel>
+        </PossiblyUnusedMethod>
+
+        <PossiblyUnusedParam errorLevel="info">
+            <errorLevel type="suppress">
+                <directory name="src/Repository"/>
+            </errorLevel>
+        </PossiblyUnusedParam>
+
+        <UndefinedMagicMethod errorLevel="suppress">
+            <errorLevel type="suppress">
+                <directory name="tests" />
+            </errorLevel>
+        </UndefinedMagicMethod>
+
+        <UndefinedInterfaceMethod errorLevel="suppress">
+            <errorLevel type="suppress">
+                <directory name="tests" />
+            </errorLevel>
+        </UndefinedInterfaceMethod>
+
+        <MissingOverrideAttribute errorLevel="suppress">
+            <errorLevel type="suppress">
+                <directory name="tests" />
+            </errorLevel>
+        </MissingOverrideAttribute>
+
+        <RedundantCondition errorLevel="suppress">
+            <errorLevel type="suppress">
+                <directory name="tests" />
+            </errorLevel>
+        </RedundantCondition>
+    </issueHandlers>
+
+</psalm>

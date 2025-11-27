@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\BookingRepository;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -30,11 +34,11 @@ class Booking
     private ?string $status = 'active';
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    private ?DateTimeInterface $createdAt = null;
 
     public function __construct()
     {
-        $this->createdAt = new \DateTime();
+        $this->createdAt = new DateTime();
     }
 
     // Геттеры и сеттеры
@@ -51,6 +55,7 @@ class Booking
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
         return $this;
     }
 
@@ -62,6 +67,7 @@ class Booking
     public function setHouse(?House $house): static
     {
         $this->house = $house;
+
         return $this;
     }
 
@@ -73,6 +79,7 @@ class Booking
     public function setComment(?string $comment): static
     {
         $this->comment = $comment;
+
         return $this;
     }
 
@@ -84,10 +91,11 @@ class Booking
     public function setStatus(string $status): static
     {
         $this->status = $status;
+
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): ?DateTimeInterface
     {
         return $this->createdAt;
     }
@@ -104,4 +112,3 @@ class Booking
         ];
     }
 }
-
