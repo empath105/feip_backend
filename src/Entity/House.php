@@ -192,6 +192,11 @@ class House
         return $this;
     }
 
+    public function __toString(): string
+    {
+        return (string) $this->id;
+    }
+
     public function toArray(): array
     {
         return [
