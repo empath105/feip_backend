@@ -12,12 +12,14 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 #[UniqueEntity(fields: ['phone'], message: 'There is already an account with this phone')]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -39,10 +41,18 @@ class User
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?DateTimeInterface $createdAt = null;
 
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
+
+    #[ORM\Column]
+    private string $password;
+
     public function __construct()
     {
         $this->bookings = new ArrayCollection();
         $this->createdAt = new DateTime();
+        $this->roles = ['ROLE_USER'];
+        $this->password = '';
     }
 
     // Геттеры и сеттеры
@@ -99,6 +109,47 @@ class User
         return $this;
     }
 
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    public function getSalt(): ?string
+    {
+        return null;
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->phone;
+    }
+
     /**
      * @return Collection<int, Booking>
      */
@@ -137,6 +188,7 @@ class User
             'phone' => $this->phone,
             'name' => $this->name,
             'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+            'roles' => $this->getRoles(),
         ];
     }
 }

@@ -34,6 +34,10 @@ class UserController extends AbstractController
                 throw new BadRequestHttpException('Invalid JSON data');
             }
 
+            if (!isset($data['password'])) {
+                $data['password'] = bin2hex(random_bytes(8));
+            }
+
             $result = $this->userService->createUser($data);
 
             return $this->json($result, 201);

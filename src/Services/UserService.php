@@ -7,25 +7,29 @@ namespace App\Services;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use InvalidArgumentException;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserService
 {
     private UserRepository $userRepository;
     private ValidatorInterface $validator;
+    private UserPasswordHasherInterface $passwordHasher;
 
     public function __construct(
         UserRepository $userRepository,
         ValidatorInterface $validator,
+        UserPasswordHasherInterface $passwordHasher,
     ) {
         $this->userRepository = $userRepository;
         $this->validator = $validator;
+        $this->passwordHasher = $passwordHasher;
     }
 
     public function createUser(array $data): array
     {
-        if (!isset($data['email']) || !isset($data['phone']) || !isset($data['name'])) {
-            throw new InvalidArgumentException('Missing required fields: email, phone, name');
+        if (!isset($data['email']) || !isset($data['phone']) || !isset($data['name']) || !isset($data['password'])) {
+            throw new InvalidArgumentException('Missing required fields: email, phone, name, password');
         }
 
         $existingUser = $this->userRepository->findByEmail($data['email']);
@@ -42,6 +46,12 @@ class UserService
         $user->setEmail($data['email']);
         $user->setPhone($data['phone']);
         $user->setName($data['name']);
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password']);
+        $user->setPassword($hashedPassword);
+
+        $roles = $data['roles'] ?? ['ROLE_USER'];
+        $user->setRoles($roles);
 
         $errors = $this->validator->validate($user);
         if (count($errors) > 0) {
