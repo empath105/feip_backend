@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use App\Controller\BookingController;
 use App\Repository\BookingRepository;
 use DateTime;
 use DateTimeInterface;
@@ -12,6 +18,34 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: BookingRepository::class)]
 #[ORM\Table(name: 'bookings')]
+#[ApiResource(
+    operations: [
+        new Post(
+            uriTemplate: '/bookings',
+            controller: BookingController::class . '::createBooking',
+            description: 'Create new booking',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Put(
+            uriTemplate: '/bookings/{id}',
+            controller: BookingController::class . '::updateBooking',
+            description: 'Update booking comment',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Delete(
+            uriTemplate: '/bookings/{id}',
+            controller: BookingController::class . '::deleteBooking',
+            description: 'Delete booking',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Get(
+            uriTemplate: '/bookings/{id}',
+            controller: BookingController::class . '::getBooking',
+            description: 'Get booking by ID',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+    ]
+)]
 class Booking
 {
     #[ORM\Id]

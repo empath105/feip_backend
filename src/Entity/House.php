@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use App\Controller\HouseController;
 use App\Repository\HouseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -11,6 +17,40 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: HouseRepository::class)]
+#[ApiResource(
+    operations: [
+        new Post(
+            uriTemplate: '/houses',
+            controller: HouseController::class . '::createHouse',
+            description: 'Create new house',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new GetCollection(
+            uriTemplate: '/houses/available',
+            controller: HouseController::class . '::getAvailableHouses',
+            description: 'Get all available houses',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Get(
+            uriTemplate: '/houses/{id}',
+            controller: HouseController::class . '::getHouse',
+            description: 'Get house by ID',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Delete(
+            uriTemplate: '/houses/{id}',
+            controller: HouseController::class . '::deleteHouse',
+            description: 'Delete house',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Get(
+            uriTemplate: '/houses/{id}/bookings',
+            controller: HouseController::class . '::getHouseBookings',
+            description: 'Get bookings for house',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+    ]
+)]
 class House
 {
     #[ORM\Id]

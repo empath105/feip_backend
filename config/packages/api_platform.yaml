@@ -1,0 +1,21 @@
+api_platform:
+    title: 'House Booking API'
+    version: 1.0.0
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
+    formats:
+        jsonld: ['application/ld+json']
+        json: ['application/json']
+    
+    error_formats:
+        jsonproblem: ['application/problem+json']
+        jsonld: ['application/problem+json']
+    swagger:
+        api_keys:
+            Bearer:
+                name: Authorization
+                type: header
+    mapping:
+        paths: ['%kernel.project_dir%/src/Entity']

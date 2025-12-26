@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use App\Controller\UserController;
 use App\Repository\UserRepository;
 use DateTime;
 use DateTimeInterface;
@@ -19,6 +25,39 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\Table(name: 'users')]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 #[UniqueEntity(fields: ['phone'], message: 'There is already an account with this phone')]
+#[ApiResource(
+    operations: [
+        new Post(
+            uriTemplate: '/users',
+            controller: UserController::class . '::createUser',
+            description: 'Register new user'
+        ),
+        new GetCollection(
+            uriTemplate: '/users',
+            controller: UserController::class . '::getAllUsers',
+            description: 'Get all users',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Get(
+            uriTemplate: '/users/{id}',
+            controller: UserController::class . '::getUserById',
+            description: 'Get user by ID',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Get(
+            uriTemplate: '/users/{id}/bookings',
+            controller: UserController::class . '::getUserBookings',
+            description: 'Get bookings for user',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+        new Delete(
+            uriTemplate: '/users/{id}',
+            controller: UserController::class . '::deleteUser',
+            description: 'Delete user',
+            security: 'is_granted("IS_AUTHENTICATED_FULLY")'
+        ),
+    ]
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
