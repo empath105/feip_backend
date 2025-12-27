@@ -6,6 +6,8 @@ use App\Services\ServicesCSV;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class HouseController extends AbstractController
 {
@@ -28,7 +30,7 @@ class HouseController extends AbstractController
             
             return $this->json($housesArray, 200, [], ['json_encode_options' => JSON_UNESCAPED_UNICODE]);
         } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+            throw new BadRequestHttpException('Failed to get available houses: ' . $e->getMessage());
         }
     }
 
@@ -38,12 +40,12 @@ class HouseController extends AbstractController
             $house = $this->csvService->getHouseById($id);
             
             if (!$house) {
-                return $this->json(['error' => 'House not found'], 404);
+                throw new NotFoundHttpException('House not found');
             }
             
             return $this->json($house->toArray(), 200, [], ['json_encode_options' => JSON_UNESCAPED_UNICODE]);
         } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+            throw new BadRequestHttpException('Failed to get house: ' . $e->getMessage());
         }
     }
 }

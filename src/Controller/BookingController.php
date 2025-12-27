@@ -7,6 +7,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class BookingController extends AbstractController
 {
@@ -22,7 +24,7 @@ class BookingController extends AbstractController
         $data = json_decode($request->getContent(), true);
         
         if (!isset($data['house_id']) || !isset($data['phone'])) {
-            return $this->json(['error' => 'Missing required fields: house_id and phone'], 400);
+            throw new BadRequestHttpException('Missing required fields: house_id and phone');
         }
         
         $houseId = (int)$data['house_id'];
@@ -31,16 +33,16 @@ class BookingController extends AbstractController
         
         $house = $this->csvService->getHouseById($houseId);
         if (!$house) {
-            return $this->json(['error' => 'House not found'], 404);
+            throw new NotFoundHttpException('House not found');
         }
         
         $success = $this->csvService->createBooking($houseId, $phone, $comment);
         
-        if ($success) {
-            return $this->json(['message' => 'Booking created successfully']);
+        if (!$success) {
+            throw new BadRequestHttpException('Failed to create booking');
         }
         
-        return $this->json(['error' => 'Failed to create booking'], 500);
+        return $this->json(['message' => 'Booking created successfully'], 201);
     }
 
     #[Route('/api/bookings/{id}', name: 'update_booking', methods: ['PUT'])]
@@ -48,36 +50,36 @@ class BookingController extends AbstractController
         $data = json_decode($request->getContent(), true);
         
         if (!isset($data['comment'])) {
-            return $this->json(['error' => 'Comment is required'], 400);
+            throw new BadRequestHttpException('Comment is required');
         }
         
         $booking = $this->csvService->getBookingById($id);
         if (!$booking) {
-            return $this->json(['error' => 'Booking not found'], 404);
+            throw new NotFoundHttpException('Booking not found');
         }
         
         $success = $this->csvService->updateBooking($id, $data['comment']);
         
-        if ($success) {
-            return $this->json(['message' => 'Booking updated successfully']);
+        if (!$success) {
+            throw new BadRequestHttpException('Failed to update booking');
         }
         
-        return $this->json(['error' => 'Failed to update booking'], 500);
+        return $this->json(['message' => 'Booking updated successfully']);
     }
 
     #[Route('/api/bookings/{id}', name: 'delete_booking', methods: ['DELETE'])]
     public function deleteBooking(int $id): JsonResponse {
         $booking = $this->csvService->getBookingById($id);
         if (!$booking) {
-            return $this->json(['error' => 'Booking not found'], 404);
+            throw new NotFoundHttpException('Booking not found');
         }
         
         $success = $this->csvService->deleteBooking($id);
         
-        if ($success) {
-            return $this->json(['message' => 'Booking deleted successfully']);
+        if (!$success) {
+            throw new BadRequestHttpException('Failed to delete booking');
         }
         
-        return $this->json(['error' => 'Failed to delete booking'], 500);
+        return $this->json(['message' => 'Booking deleted successfully']);
     }
 }
