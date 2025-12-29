@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Вход в админ-панель{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Вход в админ-панель</h4>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                    {% endif %}
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Телефон</label>
+                            <input type="text" 
+                                   value="{{ last_username }}" 
+                                   name="phone" 
+                                   id="phone" 
+                                   class="form-control" 
+                                   required 
+                                   autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Пароль</label>
+                            <input type="password" 
+                                   name="password" 
+                                   id="password" 
+                                   class="form-control" 
+                                   required>
+                        </div>
+
+                        <input type="hidden" name="_csrf_token" 
+                               value="{{ csrf_token('authenticate') }}">
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-lg" type="submit">Войти</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">Требуются права администратора (ROLE_ADMIN)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 15px;
+    }
+    
+    .btn-primary {
+        background: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        border-radius: 15px;
+    }
+    
+    .btn-primary:hover {
+        background: #0b5ed7;
+        border-color: #0a58ca;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}

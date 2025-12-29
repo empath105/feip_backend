@@ -1,0 +1,56 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block page_title %}Админ-панель - Главная{% endblock %}
+
+{% block page_content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-success">
+                    <h4 class="alert-heading">🎉 Добро пожаловать в админ-панель!</h4>
+                    <p>Вы успешно вошли в систему управления бронированиями.</p>
+                    <hr>
+                    <p class="mb-0">Используйте меню слева для навигации по разделам.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-header">
+                        <i class="fa fa-users"></i> Пользователи
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Управление пользователями</h5>
+                        <p class="card-text">Добавление, редактирование и удаление пользователей системы.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card text-white bg-success mb-3">
+                    <div class="card-header">
+                        <i class="fa fa-home"></i> Дома
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Управление домами</h5>
+                        <p class="card-text">Список всех домов, добавление новых, изменение информации.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-header">
+                        <i class="fa fa-calendar"></i> Бронирования
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Управление бронированиями</h5>
+                        <p class="card-text">Просмотр, подтверждение и отмена бронирований.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

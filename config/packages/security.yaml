@@ -19,9 +19,18 @@ security:
             provider: app_user_provider
             access_token:
                 token_handler: App\Security\AccessTokenHandler
-        main:
-            lazy: true
+        admin:
+            pattern: ^/admin
             provider: app_user_provider
+            form_login:
+                login_path: admin_login
+                check_path: admin_login
+                default_target_path: admin
+                username_parameter: phone
+                password_parameter: password
+            logout:
+                path: admin_logout
+                target: admin_login
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -32,12 +41,16 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+         - { path: ^/admin/login, roles: PUBLIC_ACCESS }
+         - { path: ^/admin, roles: ROLE_ADMIN }
+
          - { path: ^/api$, roles: PUBLIC_ACCESS }
          - { path: ^/api/docs, roles: PUBLIC_ACCESS }
 
          - { path: ^/api/login, roles: PUBLIC_ACCESS }
          - { path: ^/api/users$, roles: PUBLIC_ACCESS, methods: [POST] }
          - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+
 
 when@test:
     security:
